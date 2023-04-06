@@ -21,7 +21,7 @@ class serialConnection:
         self.determine_environment()
         print("Serial Connection Started")
         self.serConnection = serial.Serial(port=self.port,
-                                           baudrate=9000,
+                                           baudrate=9600,
                                            parity=serial.PARITY_NONE,
                                            stopbits=serial.STOPBITS_ONE,
                                            bytesize=serial.EIGHTBITS,

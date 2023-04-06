@@ -1,3 +1,5 @@
+import time
+
 import pygame
 from pygame import mixer
 import DrumBrain
@@ -16,20 +18,26 @@ def main():
 
     while running:
         data = serial_connection.readData()
+        #print(data)
         dataSplit = data.decode('utf-8')[0:-2]
         print(dataSplit)
         if dataSplit == "snare":
-            mixer.music.load("DrumSamples/CyCdh_K3Snr-01.wav")
-            mixer.music.play()
+            mixer.Channel(0).play(mixer.Sound("DrumSamples/CyCdh_K3Snr-01.wav"))
+            #print("snare playing at time " + str(time.time_ns() / 1000000))
 
         if dataSplit == "bass":
-            mixer.music.load("DrumSamples/CyCdh_K3Kick-01.wav")
-            mixer.music.play()
+            mixer.Channel(1).play(mixer.Sound("DrumSamples/CyCdh_K3Kick-01.wav"))
+           # print("bass drum playing at time " +str(time.time_ns() / 1000000))
+
+        if dataSplit == "c4":
+            mixer.Channel(2).play(mixer.Sound("DrumSamples/CyCdh_K3ClHat-01.wav"))
+            #print("hihat playing at time " + str(time.time_ns() / 1000000))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+    print("main loop left")
     # close the serial connection
     serial_connection.closeSerial()
 
