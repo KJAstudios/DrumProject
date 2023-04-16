@@ -1,29 +1,80 @@
 #include <Arduino.h>
+#include "main.h"
 
-const int numChannels = 6;
-
-// channel to read for single channel data
-const int singleChannelReadIndex = 40;
-
-// drum data
-const int channels[6] = {A0, A1, A2, A3, A4, A5};
-const int maxScanCycles = 4;
-int thresholds[6] = {50, 1, 1, 1, 50, 50};
-int readInputs[6] = {0, 0, 0, 0, 0, 0};
-int peaks[6] = {0, 0, 0, 0, 0, 0};
-unsigned int scanTimes[6] = {0, 0, 0, 0, 0, 0};
-unsigned int scanCycles[6] = {0, 0, 0, 0, 0, 0};
-const String channelNames[6] = {"snare", "snareRim", "c2", "r2", "bass", "c4"};
-
-// highhat switch data
-const int highHatPin = 3;
-int switchState = 0;
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println("Serial started");
   pinMode(highHatPin, INPUT);
+}
+
+void loop()
+{
+  CheckForInput();
+  // SingleChannelRead();
+  // DrumMain();
+  DrumMainNoBlock();
+}
+
+void CheckForInput()
+{
+  if (Serial.available())
+  {
+    String fullCommand = Serial.readStringUntil('\r');
+    Serial.println("command Received: " + fullCommand);
+    int splitIndex = fullCommand.indexOf(':');
+    String command = fullCommand.substring(0, splitIndex);
+
+    if (command == "scanTime")
+    {
+      String value = fullCommand.substring(splitIndex + 1, fullCommand.length());
+      int newScanTime = value.toInt();
+      maxScanCycles = newScanTime;
+      Serial.print("New Scan Time: ");
+      Serial.println(maxScanCycles);
+      return;
+    }
+
+    else if(command == "threshold"){
+      String values = fullCommand.substring(splitIndex + 1, fullCommand.length());
+      int valueSplit = values.indexOf(':');
+      String channelName = values.substring(0, valueSplit);
+      String thresholdText = values.substring(valueSplit + 1, values.length());
+      int channelIndex = channelName.toInt();
+      int newThreshold = thresholdText.toInt();
+
+      thresholds[channelIndex] = newThreshold;
+
+      Serial.print("New Threshold: ");
+      Serial.print(thresholds[channelIndex]);
+      Serial.print(" for channel ");
+      Serial.println(channelIndex);
+    }
+  }
+}
+
+void DrumMainNoBlock()
+{
+  for (int curChannel = 0; curChannel < numChannels; curChannel++)
+  {
+    ScanChannel(curChannel);
+  }
+}
+
+void ScanChannel(int curChannel)
+{
+  ReadChannel(curChannel);
+
+  if (scanCycles[curChannel] <= maxScanCycles && millis() >= currentScanTimes[curChannel])
+  {
+    CheckPeak(curChannel);
+    IncrementTimer(curChannel);
+  }
+  else if (scanCycles[curChannel] > maxScanCycles)
+  {
+    SendToSerial(curChannel);
+  }
 }
 
 void ReadChannel(int index)
@@ -39,23 +90,10 @@ void CheckPeak(int index)
   }
 }
 
-void PrintChannelData(int index)
-{
-  Serial.println(channelNames[index]);
-  Serial.println(peaks[index]);
-}
-
-void ClearChannel(int channel)
-{
-  peaks[channel] = 0;
-  scanCycles[channel] = 0;
-  scanTimes[channel] = 0;
-}
-
 void IncrementTimer(int channel)
 {
   scanCycles[channel]++;
-  scanTimes[channel] = millis() + 1;
+  currentScanTimes[channel] = millis() + 1;
 }
 
 void SendToSerial(int curChannel)
@@ -71,27 +109,17 @@ void SendToSerial(int curChannel)
   }
 }
 
-void ScanChannel(int curChannel)
+void PrintChannelData(int index)
 {
-  ReadChannel(curChannel);
-
-  if (scanCycles[curChannel] <= maxScanCycles && millis() >= scanTimes[curChannel])
-  {
-    CheckPeak(curChannel);
-    IncrementTimer(curChannel);
-  }
-  else if (scanCycles[curChannel] > maxScanCycles)
-  {
-    SendToSerial(curChannel);
-  }
+  Serial.println(channelNames[index]);
+  Serial.println(peaks[index]);
 }
 
-void DrumMainNoBlock()
+void ClearChannel(int channel)
 {
-  for (int curChannel = 0; curChannel < numChannels; curChannel++)
-  {
-    ScanChannel(curChannel);
-  }
+  peaks[channel] = 0;
+  scanCycles[channel] = 0;
+  currentScanTimes[channel] = 0;
 }
 
 void SingleChannelRead()
@@ -141,11 +169,4 @@ if the peak is above the threshold, then send the serial out
       peaks[curChannel] = 0;
     }
   }
-}
-
-void loop()
-{
-  // SingleChannelRead();
-  // DrumMain();
-  DrumMainNoBlock();
 }

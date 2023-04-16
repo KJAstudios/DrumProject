@@ -1,5 +1,6 @@
-import serial
 import platform
+
+import serial
 
 
 class serialConnection:
@@ -17,7 +18,7 @@ class serialConnection:
             self.port = "COM6"
 
     # create the serial connection
-    def startSerial(self):
+    def start_serial(self):
         self.determine_environment()
         print("Serial Connection Started")
         self.serConnection = serial.Serial(port=self.port,
@@ -28,14 +29,19 @@ class serialConnection:
                                            timeout=None)
         print(self.serConnection.is_open)
 
-    def readData(self):
-        #print(self.serConnection.is_open)
-        if self.serConnection != None:
+    def send_data(self, data):
+        print("sending data: " + data)
+        data = data.encode('utf-8')
+        self.serConnection.write(data)
+
+    def read_data(self):
+        # print(self.serConnection.is_open)
+        if self.serConnection is not None:
             data = self.serConnection.readline()
             return data
 
     # close the serial connection
-    def closeSerial(self):
+    def close_serial(self):
         print("Serial Connection Closing")
-        if self.serConnection != None:
+        if self.serConnection is not None:
             self.serConnection.close()
