@@ -2,15 +2,33 @@ import pygame
 from pygame import mixer
 
 import DrumCommands
-import serialConnection
+import SerialConnection
+from OnScreenConsole import OnScreenConsole
+
+# run the init outside of a function so that variables are declared globally
+# init pygame
+pygame.init()
+
+# set the window name
+pygame.display.set_caption("minimal program")
+
+# create the screen
+screen = pygame.display.set_mode((800, 480))
+# create the program modules
+console = OnScreenConsole(screen, (10, 10))
+console.log("test")
+
+# start the mixer
+mixer.init()
 
 
 def main():
+    global console
     pygame_setup()
     mixer.music.set_volume(1)
 
     # start the serial connection
-    serial_connection = serialConnection.serialConnection()
+    serial_connection = SerialConnection.SerialConnection()
     serial_connection.start_serial()
 
     wait_for_startup(serial_connection)
@@ -21,26 +39,28 @@ def main():
 
     while running:
         data = serial_connection.read_data()
-        print(data)
+        console.log(data)
         dataSplit = data.decode('utf-8')[0:-2]
-        print(dataSplit)
+        console.log(dataSplit)
         if dataSplit == "snare":
             mixer.Channel(0).play(mixer.Sound("DrumSamples/CyCdh_K3Snr-01.wav"))
-            # print("snare playing at time " + str(time.time_ns() / 1000000))
+            # console.log("snare playing at time " + str(time.time_ns() / 1000000))
 
         if dataSplit == "bass":
             mixer.Channel(1).play(mixer.Sound("DrumSamples/CyCdh_K3Kick-01.wav"))
-            # print("bass drum playing at time " +str(time.time_ns() / 1000000))
+            # console.log("bass drum playing at time " +str(time.time_ns() / 1000000))
 
         if dataSplit == "c4":
             mixer.Channel(2).play(mixer.Sound("DrumSamples/CyCdh_K3ClHat-01.wav"))
-            # print("hihat playing at time " + str(time.time_ns() / 1000000))
+            # console.log("hihat playing at time " + str(time.time_ns() / 1000000))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-    print("main loop left")
+        pygame.display.update()
+
+    console.log("main loop left")
     # close the serial connection
     serial_connection.close_serial()
 
@@ -49,17 +69,9 @@ def main():
 
 
 def pygame_setup():
-    # init pygame
-    pygame.init()
+    global screen
+    global console
 
-    # set the window name
-    pygame.display.set_caption("minimal program")
-
-    # create a surface on the screen
-    screen = pygame.display.set_mode((500, 500))
-
-    # start the mixer
-    mixer.init()
 
 
 def wait_for_startup(serial_connection):
@@ -68,7 +80,7 @@ def wait_for_startup(serial_connection):
     while connection_started is False:
         startup_message = serial_connection.read_data()
         startup_message = startup_message.decode('utf-8')[0:-2]
-        print(startup_message)
+        console.log(startup_message)
         if startup_message == "Serial started":
             connection_started = True
 
