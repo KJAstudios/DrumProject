@@ -111,7 +111,7 @@ void SendToSerial(int curChannel)
 
 void PrintChannelData(int index)
 {
-  Serial.println(channelNames[index]);
+  Serial.print(channelNames[index] + " ");
   Serial.println(peaks[index]);
 }
 
