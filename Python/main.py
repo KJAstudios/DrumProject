@@ -1,8 +1,10 @@
 import pygame
 from pygame import mixer
+
 import DrumCommands
 import SerialConnection
 from OnScreenConsole import OnScreenConsole
+from ValueSelector import ValueSelector
 
 # run the init outside of a function so that variables are declared globally
 # init pygame
@@ -15,8 +17,13 @@ pygame.display.set_caption("minimal program")
 screen = pygame.display.set_mode((800, 480))
 screen.fill((255, 255, 255))
 clock = pygame.time.Clock()
+font = pygame.font.SysFont("Helvetica", 20)
 # create the program modules
-console = OnScreenConsole((0, 0), screen)
+console = OnScreenConsole((0, 0), font, screen)
+channel_selector = ValueSelector("Selected Channel", (500, 0), font, screen)
+threshold_selector = ValueSelector("Threshold", (500, channel_selector.height), font, screen)
+scan_time_selector = ValueSelector("Scan Time", (500, channel_selector.height + threshold_selector.height), font,
+                                   screen)
 
 # start the mixer
 mixer.init()
@@ -88,4 +95,3 @@ def get_console():
 # run the main function only if this module is executed as the main screen
 if __name__ == "__main__":
     main()
-
