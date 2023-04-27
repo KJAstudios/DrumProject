@@ -36,7 +36,8 @@ void CheckForInput()
       return;
     }
 
-    else if(command == "threshold"){
+    else if (command == "threshold")
+    {
       String values = fullCommand.substring(splitIndex + 1, fullCommand.length());
       int valueSplit = values.indexOf(':');
       String channelName = values.substring(0, valueSplit);
@@ -50,6 +51,24 @@ void CheckForInput()
       Serial.print(thresholds[channelIndex]);
       Serial.print(" for channel ");
       Serial.println(channelIndex);
+    }
+
+    else if (command == "requestThreshold")
+    {
+      String value = fullCommand.substring(splitIndex + 1, fullCommand.length());
+      int channelRequested = value.toInt();
+
+      if (channelRequested < 0 || channelRequested >= numChannels)
+      {
+        Serial.println("Invalid Channel Requested");
+      }
+      else
+      {
+        Serial.print("Channel ");
+        Serial.print(channelRequested);
+        Serial.print(" Threshold: ");
+        Serial.println(thresholds[channelRequested]);
+      }
     }
   }
 }

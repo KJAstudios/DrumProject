@@ -1,10 +1,13 @@
 import pygame
 from pygame import mixer
 
+import DrumCommandTypes
 import DrumCommands
+import DrumSettings
 import SerialConnection
 from OnScreenConsole import OnScreenConsole
-from ValueSelector import ValueSelectorFactory
+from ThresholdUpdateManager import ThresholdUpdateManager
+from ValueSelectorFactory import ValueSelectorFactory
 
 
 def wait_for_startup(serial_connection):
@@ -20,8 +23,11 @@ def wait_for_startup(serial_connection):
 
 
 def settings_setup(serial_connection):
-    DrumCommands.send_new_scan_time(51, serial_connection, get_console())
-    DrumCommands.send_new_threshold(45, 3, serial_connection, get_console())
+    DrumCommands.send_new_scan_time(DrumSettings.scan_time, serial_connection, get_console())
+    channel = 0
+    for threshold in DrumSettings.channel_thresholds:
+        DrumCommands.send_new_threshold(threshold, channel, serial_connection, get_console())
+        channel += 1
 
 
 def main():
@@ -105,12 +111,12 @@ wait_for_startup(serial_connection)
 settings_setup(serial_connection)
 
 selector_factory = ValueSelectorFactory(font, screen, serial_connection, console)
-channel_selector = selector_factory.create_selector("Selected Channel", (500, 0))
-threshold_selector = selector_factory.create_selector("Threshold", (500, channel_selector.height))
+channel_selector = ThresholdUpdateManager((500, 0), selector_factory, serial_connection, console)
 scan_time_selector = selector_factory.create_selector("Scan Time",
-                                                      (500, channel_selector.height + threshold_selector.height))
+                                                      (500, channel_selector.height),
+                                                      current_value=51, command_type=DrumCommandTypes.SCAN_TIME)
 
-input_listeners = (channel_selector, threshold_selector, scan_time_selector)
+input_listeners = (channel_selector, scan_time_selector)
 
 # start the mixer
 mixer.init()
