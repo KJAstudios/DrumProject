@@ -16,6 +16,7 @@ class OnScreenConsole:
 
     def log(self, message):
         print(message)
+        message = f"{message}"
         message.strip()
         message_surface = self.font.render(message, True, (0, 0, 0))
         self.draw_text(message_surface)

@@ -15,9 +15,10 @@ def wait_for_message(message, serial_connection, console):
     command_processed = False
     while command_processed is False:
         startup_message = serial_connection.read_data()
-        startup_message = startup_message.decode('utf-8')[0:-2]
-        console.log(startup_message)
-        startup_split = startup_message.split(':')
-        if startup_split[0] == message:
-            command_processed = True
+        if startup_message is not None:
+            startup_message = startup_message.decode('utf-8')[0:-2]
+            console.log(startup_message)
+            startup_split = startup_message.split(':')
+            if startup_split[0] == message:
+                command_processed = True
     console.log("")

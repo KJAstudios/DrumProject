@@ -43,25 +43,21 @@ def main():
     running = True
 
     while running:
-        pygame.display.flip()
-        data = serial_connection.read_data()
-        dataSplit = data.decode('utf-8')[0:-2]
-        get_console().log(dataSplit)
-        if dataSplit == "snare":
-            mixer.Channel(0).play(mixer.Sound("DrumSamples/CyCdh_K3Snr-01.wav"))
-            # get_console().log("snare playing at time " + str(time.time_ns() / 1000000))
-
-        if dataSplit == "bass":
-            mixer.Channel(1).play(mixer.Sound("DrumSamples/CyCdh_K3Kick-01.wav"))
-            # get_console().log("bass drum playing at time " +str(time.time_ns() / 1000000))
-
-        if dataSplit == "c4":
-            mixer.Channel(2).play(mixer.Sound("DrumSamples/CyCdh_K3ClHat-01.wav"))
-            # get_console().log("hihat playing at time " + str(time.time_ns() / 1000000))
-
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                process_mouse_click(event)
+            if event.type == pygame.MOUSEBUTTONUP:
+                continue
             if event.type == pygame.QUIT:
                 running = False
+
+        clock.tick(60)
+
+        data = serial_connection.read_data()
+        if data is not None:
+            process_serial_message(data)
+
+        pygame.display.flip()
 
     get_console().log("main loop left")
     # close the serial connection
@@ -70,16 +66,35 @@ def main():
     # close pygame
     pygame.display.quit()
 
+def process_serial_message(data):
+    dataSplit = data.decode('utf-8')[0:-2]
+    get_console().log(dataSplit)
+    if dataSplit == "snare":
+        mixer.Channel(0).play(mixer.Sound("DrumSamples/CyCdh_K3Snr-01.wav"))
+        # get_console().log("snare playing at time " + str(time.time_ns() / 1000000))
+
+    if dataSplit == "bass":
+        mixer.Channel(1).play(mixer.Sound("DrumSamples/CyCdh_K3Kick-01.wav"))
+        # get_console().log("bass drum playing at time " +str(time.time_ns() / 1000000))
+
+    if dataSplit == "c4":
+        mixer.Channel(2).play(mixer.Sound("DrumSamples/CyCdh_K3ClHat-01.wav"))
+        # get_console().log("hihat playing at time " + str(time.time_ns() / 1000000))
+
+def process_mouse_click(event):
+    console.log(event.button)
+
 
 def wait_for_startup(serial_connection):
     connection_started = False
 
     while connection_started is False:
         startup_message = serial_connection.read_data()
-        startup_message = startup_message.decode('utf-8')[0:-2]
-        get_console().log(startup_message)
-        if startup_message == "Serial started":
-            connection_started = True
+        if startup_message is not None:
+            startup_message = startup_message.decode('utf-8')[0:-2]
+            get_console().log(startup_message)
+            if startup_message == "Serial started":
+                connection_started = True
 
 
 def settings_setup(serial_connection):

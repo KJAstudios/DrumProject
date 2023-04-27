@@ -26,7 +26,7 @@ class SerialConnection:
                                            parity=serial.PARITY_NONE,
                                            stopbits=serial.STOPBITS_ONE,
                                            bytesize=serial.EIGHTBITS,
-                                           timeout=None)
+                                           timeout=0)
         self.console.log(f"{self.serConnection.is_open}")
 
     def send_data(self, data):
@@ -37,8 +37,19 @@ class SerialConnection:
     def read_data(self):
         # self.console.log(self.serConnection.is_open)
         if self.serConnection is not None:
-            data = self.serConnection.readline()
-            return data
+            data = self.serConnection.read()
+            return_string = data
+
+            if data is None or data is '\n' or data is b'':
+                return None
+
+            end_found = False
+            while end_found is False:
+                data = self.serConnection.read()
+                return_string += data
+                if b'\n' in data:
+                    end_found = True
+            return return_string
 
     # close the serial connection
     def close_serial(self):
